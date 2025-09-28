@@ -15,7 +15,7 @@ EMISSION_FACTORS = {
 # ---------------- DB setup ----------------
 def init_db():
     # create DB and tables if not exist
-    conn = sqlite3.connect(DB_FILE)
+    conn = sqlite3.connect("carbon.db")
     c = conn.cursor()
     c.execute("""
     CREATE TABLE IF NOT EXISTS users (
@@ -61,7 +61,7 @@ def calculate_emissions(car, bike, bus, elec, meat, veg):
 
 def add_entry(user_id, date, car, bike, bus, elec, meat, veg):
     car_em, bike_em, bus_em, elec_em, food_em, total = calculate_emissions(car, bike, bus, elec, meat, veg)
-    conn = sqlite3.connect(DB_FILE)
+    conn = sqlite3.connect("carbon.db")
     c = conn.cursor()
     c.execute("""
         INSERT INTO entries 
@@ -74,14 +74,14 @@ def add_entry(user_id, date, car, bike, bus, elec, meat, veg):
     return total
 
 def get_entries(user_id):
-    conn = sqlite3.connect(DB_FILE)
+    conn = sqlite3.connect("carbon.db")
     df = pd.read_sql_query("SELECT * FROM entries WHERE user_id=?", conn, params=(user_id,))
     conn.close()
     return df
 
 def log_event(user_id, event, info=""):
     """Insert a row into visits table with timestamp"""
-    conn = sqlite3.connect(DB_FILE)
+    conn = sqlite3.connect("carbon.db")
     c = conn.cursor()
     ts = dt.datetime.utcnow().isoformat()  # store UTC ISO timestamp
     c.execute("INSERT INTO visits (user_id, event, info, timestamp) VALUES (?,?,?,?)",
@@ -90,13 +90,13 @@ def log_event(user_id, event, info=""):
     conn.close()
 
 def get_all_users_df():
-    conn = sqlite3.connect(DB_FILE)
+    conn = sqlite3.connect("carbon.db")
     df = pd.read_sql_query("SELECT id, username FROM users ORDER BY id", conn)
     conn.close()
     return df
 
 def get_visits_df(limit=1000):
-    conn = sqlite3.connect(DB_FILE)
+    conn = sqlite3.connect("carbon.db")
     df = pd.read_sql_query("SELECT v.id, v.user_id, u.username, v.event, v.info, v.timestamp "
                            "FROM visits v LEFT JOIN users u ON v.user_id = u.id "
                            "ORDER BY v.timestamp DESC LIMIT ?", conn, params=(limit,))
@@ -104,7 +104,7 @@ def get_visits_df(limit=1000):
     return df
 
 def get_login_counts():
-    conn = sqlite3.connect(DB_FILE)
+    conn = sqlite3.connect("carbon.db")
     df = pd.read_sql_query("SELECT user_id, COUNT(*) AS logins FROM visits WHERE event='login' GROUP BY user_id", conn)
     conn.close()
     return df
@@ -132,7 +132,7 @@ if option == "Register":
     password = st.text_input("Password", type="password").strip()
     if st.button("Register"):
         if username and password:
-            conn = sqlite3.connect(DB_FILE)
+            conn = sqlite3.connect("carbon.db")
             c = conn.cursor()
             try:
                 hashed = hash_password(password)
