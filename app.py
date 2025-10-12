@@ -156,7 +156,7 @@ if st.session_state.user_id:
     if st.button("Logout"):
         st.session_state.user_id = None
         st.session_state.username = None
-        st.experimental_rerun()
+        st.stop()
 
 # Message if not logged in
 if not st.session_state.user_id:
